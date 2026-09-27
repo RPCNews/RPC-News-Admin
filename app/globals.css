@@ -4,7 +4,16 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --portal-primary: #2563eb;
 }
+
+.bg-blue-600 { background-color: var(--portal-primary) !important; }
+.text-blue-600 { color: var(--portal-primary) !important; }
+.border-blue-600 { border-color: var(--portal-primary) !important; }
+.accent-blue-600 { accent-color: var(--portal-primary) !important; }
+.hover\:bg-blue-700:hover { background-color: color-mix(in srgb, var(--portal-primary), black 12%) !important; }
+.hover\:text-blue-800:hover { color: color-mix(in srgb, var(--portal-primary), black 20%) !important; }
+.focus\:border-blue-500:focus { border-color: var(--portal-primary) !important; }
 
 @theme inline {
   --color-background: var(--background);

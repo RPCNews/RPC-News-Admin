@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import KanizPhotoCardAd from "./photocardAds/KanizPhotoCardAd";
-import PrimePhotoCardAd from "./photocardAds/PrimePhotoCardAd";
+import PhotocardAdRenderer from "./photocardAds/PhotocardAdRenderer";
+import { portalConfig } from "@/app/lib/portalConfig";
+import type { PhotocardAd } from "@/app/lib/photocardAds";
+import { getDefaultPhotocardTemplates, type PhotocardTemplate } from "@/app/lib/photocardTemplates";
 
 interface NewsPhotoCardProps {
   headline: string;
@@ -17,7 +19,8 @@ interface NewsPhotoCardProps {
   footerBarFontSize?: number;
   centerTextFontSize?: number;
   isPreview?: boolean;
-  adVariant?: "kaniz" | "prime" | "none";
+  ad?: PhotocardAd | null;
+  template?: PhotocardTemplate;
   cardRef?: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -28,13 +31,14 @@ export default function NewsPhotoCard({
   logoUrl,
   date,
   commentText = "বিস্তারিত কমেন্টে",
-  accentColor = "#D9232D",
+  accentColor = portalConfig.photocard.accentColor,
   imageScale = 1,
   headlineFontSize = 65,
   footerBarFontSize = 31,
   centerTextFontSize = 28,
   isPreview = false,
-  adVariant = "kaniz",
+  ad = null,
+  template = getDefaultPhotocardTemplates()[0],
   cardRef,
 }: NewsPhotoCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -68,32 +72,41 @@ export default function NewsPhotoCard({
 
   const proxiedLogoUrl = logoUrl?.startsWith("http")
     ? `/api/proxy-image?url=${encodeURIComponent(logoUrl)}`
-    : logoUrl || "/images/logo4.png";
+    : logoUrl || portalConfig.logoUrl;
+
+  const canvasHeight = template.format === "portrait" ? 1350 : 1080;
+  const contentHeight = canvasHeight - (ad ? 140 : 0);
+  const photoHeight = template.style === "framed" ? contentHeight - 230 : contentHeight;
+  const framed = template.style === "framed";
+  const breaking = template.style === "breaking";
 
   const content = (
     <div
       ref={isPreview ? undefined : cardRef}
       style={{
         width: "1080px",
-        height: "1080px",
+        height: `${canvasHeight}px`,
         position: "relative",
         overflow: "hidden",
         fontFamily: "var(--font-solaiman-lipi), Arial, Helvetica, sans-serif",
-        backgroundColor: "#000000",
+        backgroundColor: framed ? "#ffffff" : "#000000",
         color: "#ffffff",
         display: "flex",
         flexDirection: "column",
         border: "1px solid rgba(255, 255, 255, 0.1)", // Very subtle border for dark mode feel
       }}
     >
-      <div style={{ position: "relative", width: "1080px", height: adVariant === "none" ? "1080px" : "940px" }}>
+      <div style={{ position: "relative", width: "1080px", height: `${contentHeight}px` }}>
       <div
         style={{
           position: "absolute",
-          inset: 0,
+          top: 0,
+          left: 0,
+          right: 0,
+          height: `${photoHeight}px`,
           zIndex: 1,
           overflow: "hidden",
-          transform: adVariant === "prime" ? "translateY(-10px)" : "none",
+          transform: "none",
         }}
       >
         <img
@@ -117,32 +130,36 @@ export default function NewsPhotoCard({
           insetInline: 0,
           bottom: 0,
           height: "60%",
-          background: `linear-gradient(to top, ${accentColor} 0%, transparent 100%)`,
+          background: framed ? "transparent" : `linear-gradient(to top, ${accentColor} 0%, transparent 100%)`,
           zIndex: 2,
+          display: framed ? "none" : "block",
         }}
       />
 
-      <div
+      {template.showLogo ? <div
         style={{
           position: "absolute",
-          top: 0,
-          right: "50px",
+          top: framed ? "28px" : 0,
+          right: template.logoPosition === "top-right" ? "50px" : undefined,
+          left: template.logoPosition === "top-left" ? "50px" : undefined,
           zIndex: 10,
-          width: "165px",
-          height: "240px",
-          backgroundColor: accentColor,
-          borderBottomLeftRadius: "80px",
-          borderBottomRightRadius: "80px",
+          width: framed ? "150px" : "165px",
+          height: framed ? "150px" : "240px",
+          backgroundColor: framed ? "#ffffff" : accentColor,
+          borderRadius: framed ? "18px" : undefined,
+          borderBottomLeftRadius: framed ? "18px" : "80px",
+          borderBottomRightRadius: framed ? "18px" : "80px",
           display: "flex",
-          alignItems: "flex-end",
+          alignItems: framed ? "center" : "flex-end",
           justifyContent: "center",
-          paddingBottom: "25px",
+          paddingBottom: framed ? 0 : "25px",
+          boxShadow: framed ? "0 6px 20px rgba(0,0,0,.18)" : undefined,
         }}
       >
         <div
           style={{
-            width: "135px",
-            height: "130px",
+            width: framed ? "122px" : "135px",
+            height: framed ? "122px" : "130px",
             borderRadius: "999px",
             backgroundColor: "#ffffff",
             display: "flex",
@@ -154,7 +171,7 @@ export default function NewsPhotoCard({
         >
           <img
             src={proxiedLogoUrl}
-            alt="Jubotara News"
+            alt={portalConfig.name}
             crossOrigin="anonymous"
             style={{
               width: "100%",
@@ -164,41 +181,46 @@ export default function NewsPhotoCard({
             }}
           />
         </div>
-      </div>
+      </div> : null}
 
       <div
         style={{
           position: "absolute",
           left: 0,
-          bottom: adVariant === "kaniz" ? "68px" : "78px",
+          bottom: framed ? "150px" : breaking ? "110px" : "78px",
           width: "100%",
-          padding: "0 60px 30px",
+          padding: breaking ? "22px 42px" : "0 60px 30px",
           zIndex: 10,
+          backgroundColor: breaking ? accentColor : "transparent",
+          borderRadius: breaking ? "14px" : 0,
         }}
       >
         <div
           style={{
             display: "flex",
-            alignItems: "stretch",
-            gap: "25px",
+            alignItems: template.headlineAlignment === "center" ? "center" : "stretch",
+            justifyContent: template.headlineAlignment === "center" ? "center" : "flex-start",
+            flexDirection: template.headlineAlignment === "center" ? "column" : "row",
+            gap: template.headlineAlignment === "center" ? "12px" : "25px",
           }}
         >
-          <div
+          {template.style === "editorial" && template.headlineAlignment === "left" ? <div
             style={{
               width: "10px",
               backgroundColor: "#facc15",
               borderRadius: "2px",
               flexShrink: 0,
             }}
-          />
+          /> : null}
           <h1
             style={{
               fontSize: `${headlineFontSize}px`,
               lineHeight: 1.2,
               fontWeight: 800,
               margin: 0,
-              color: "#ffffff",
-              textShadow: "0 4px 12px rgba(0, 0, 0, 0.8)",
+              color: framed ? "#17212c" : "#ffffff",
+              textAlign: template.headlineAlignment,
+              textShadow: framed || breaking ? "none" : "0 4px 12px rgba(0, 0, 0, 0.8)",
               whiteSpace: "pre-wrap",
             }}
           >
@@ -214,7 +236,7 @@ export default function NewsPhotoCard({
           bottom: 0,
           width: "100%",
           height: "80px",
-          backgroundColor: accentColor,
+          backgroundColor: framed ? "#17212c" : accentColor,
           zIndex: 10,
           display: "flex",
           alignItems: "center",
@@ -231,9 +253,9 @@ export default function NewsPhotoCard({
             fontWeight: 600,
           }}
         >
-          <span style={{ textTransform: "uppercase" }}>{category}</span>
-          <span style={{ opacity: 0.6 }}>|</span>
-          <span>{date}</span>
+          {template.showCategory ? <span style={{ textTransform: "uppercase" }}>{category}</span> : null}
+          {template.showCategory && template.showDate ? <span style={{ opacity: 0.6 }}>|</span> : null}
+          {template.showDate ? <span>{date}</span> : null}
         </div>
 
         <div
@@ -245,10 +267,10 @@ export default function NewsPhotoCard({
             fontSize: `${centerTextFontSize}px`,
           }}
         >
-          <span>{commentText}</span>
+          {template.showComment ? <span>{commentText}</span> : null}
         </div>
 
-        <div
+        {template.showWebsite ? <div
           style={{
             flex: 1,
             display: "flex",
@@ -273,12 +295,11 @@ export default function NewsPhotoCard({
             <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
             <path d="M2 12h20" />
           </svg>
-          <span>jubotaranews.com</span>
-        </div>
+          <span>{portalConfig.photocard.website}</span>
+        </div> : null}
       </div>
       </div>
-      {adVariant === "kaniz" && <KanizPhotoCardAd />}
-      {adVariant === "prime" && <PrimePhotoCardAd />}
+      {ad ? <PhotocardAdRenderer ad={ad} /> : null}
     </div>
   );
 
@@ -286,14 +307,15 @@ export default function NewsPhotoCard({
     return (
       <div
         ref={containerRef}
-        className="relative aspect-square w-full max-w-md overflow-hidden rounded-xl border border-gray-200 bg-white"
+        className="relative w-full max-w-md overflow-hidden rounded-xl border border-gray-200 bg-white"
+        style={{ aspectRatio: `1080 / ${canvasHeight}` }}
       >
         <div
           style={{
             transform: `scale(${scale})`,
             transformOrigin: "top center",
             width: "1080px",
-            height: "1080px",
+            height: `${canvasHeight}px`,
             position: "absolute",
             top: 0,
             left: "50%",

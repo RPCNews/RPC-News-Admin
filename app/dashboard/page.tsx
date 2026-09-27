@@ -4,6 +4,7 @@ import { api, News, Category } from "@/app/lib/api";
 import { Trash2, Edit, ImageDown, Link as LinkIcon } from "lucide-react";
 import Link from "next/link";
 import PhotoCardModal from "@/components/PhotoCardModal";
+import { portalConfig } from "@/app/lib/portalConfig";
 import { useFeedback } from "@/components/FeedbackProvider";
 import { EmptyState, ErrorState, LoadingState } from "@/components/DashboardState";
 import { DashboardPage } from "@/components/DashboardShell";
@@ -137,7 +138,8 @@ export default function Dashboard() {
       showToast({ title: "No slug found for this news", variant: "error" });
       return;
     }
-    const url = `https://jubotaranews.com/news/${slug}`;
+    const domain = portalConfig.domain.replace(/^https?:\/\//, "").replace(/\/$/, "");
+    const url = `https://${domain}/news/${slug}`;
     navigator.clipboard.writeText(url).then(() => {
       showToast({ title: "Link copied to clipboard", variant: "success" });
     }).catch(() => {
@@ -368,7 +370,6 @@ export default function Dashboard() {
       {selectedNews ? (
         <PhotoCardModal
           news={selectedNews}
-          logoUrl="/images/logo4.png"
           onClose={() => setSelectedNews(null)}
         />
       ) : null}

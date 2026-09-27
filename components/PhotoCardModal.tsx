@@ -1,11 +1,18 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { domToPng } from "modern-screenshot";
 import { Download, Loader2, X } from "lucide-react";
 import type { News } from "@/app/lib/api";
 import NewsPhotoCard from "@/components/NewsPhotoCard";
 import { useFeedback } from "@/components/FeedbackProvider";
+import { portalConfig } from "@/app/lib/portalConfig";
+import { getDefaultPhotocardAds, loadPhotocardAds, type PhotocardAd } from "@/app/lib/photocardAds";
+import {
+  getDefaultPhotocardTemplates,
+  loadPhotocardTemplates,
+  type PhotocardTemplate,
+} from "@/app/lib/photocardTemplates";
 
 interface PhotoCardModalProps {
   news: News;
@@ -14,23 +21,78 @@ interface PhotoCardModalProps {
 }
 
 const DEFAULT_COMMENT = "বিস্তারিত কমেন্টে";
-
+const DEFAULT_TEMPLATE = getDefaultPhotocardTemplates()[0];
 export default function PhotoCardModal({
   news,
   onClose,
   logoUrl,
 }: PhotoCardModalProps) {
   const [headline, setHeadline] = useState(news.headline);
-  const [headlineFontSize, setHeadlineFontSize] = useState(65);
-  const [footerBarFontSize, setFooterBarFontSize] = useState(31);
-  const [centerTextFontSize, setCenterTextFontSize] = useState(28);
-  const [accentColor, setAccentColor] = useState("#D9232D");
+  const [headlineFontSize, setHeadlineFontSize] = useState(DEFAULT_TEMPLATE.headlineFontSize);
+  const [footerBarFontSize, setFooterBarFontSize] = useState(DEFAULT_TEMPLATE.footerFontSize);
+  const [centerTextFontSize, setCenterTextFontSize] = useState(DEFAULT_TEMPLATE.centerTextFontSize);
+  const [accentColor, setAccentColor] = useState(DEFAULT_TEMPLATE.accentColor);
   const [imageScale, setImageScale] = useState(1);
-  const [adVariant, setAdVariant] = useState<"kaniz" | "prime" | "none">("none");
+  const [ads, setAds] = useState<PhotocardAd[]>(getDefaultPhotocardAds);
+  const [templates, setTemplates] = useState<PhotocardTemplate[]>(getDefaultPhotocardTemplates);
+  const [selectedTemplateId, setSelectedTemplateId] = useState(DEFAULT_TEMPLATE.id);
+  const [selectedAdId, setSelectedAdId] = useState(
+    () => getDefaultPhotocardAds().find((ad) => ad.isDefault)?.id ?? "none",
+  );
+  const [adsLoading, setAdsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const { showToast } = useFeedback();
+
+  useEffect(() => {
+    let active = true;
+    loadPhotocardAds()
+      .then((storedAds) => {
+        if (!active) return;
+        setAds(storedAds);
+        setSelectedAdId(storedAds.find((ad) => ad.enabled && ad.isDefault)?.id ?? "none");
+      })
+      .catch((error) => {
+        console.error("Failed to load photocard ads", error);
+      })
+      .finally(() => {
+        if (active) setAdsLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
+
+  const selectedAd = ads.find((ad) => ad.id === selectedAdId && ad.enabled) ?? null;
+  const selectedTemplate = templates.find((template) => template.id === selectedTemplateId && template.enabled) ?? DEFAULT_TEMPLATE;
+
+  useEffect(() => {
+    let active = true;
+    loadPhotocardTemplates()
+      .then((storedTemplates) => {
+        if (!active) return;
+        setTemplates(storedTemplates);
+        const defaultTemplate = storedTemplates.find((template) => template.enabled && template.isDefault) ?? storedTemplates.find((template) => template.enabled);
+        if (defaultTemplate) {
+          setSelectedTemplateId(defaultTemplate.id);
+          setHeadlineFontSize(defaultTemplate.headlineFontSize);
+          setFooterBarFontSize(defaultTemplate.footerFontSize);
+          setCenterTextFontSize(defaultTemplate.centerTextFontSize);
+          setAccentColor(defaultTemplate.accentColor);
+        }
+      })
+      .catch((error) => console.error("Failed to load photocard templates", error));
+    return () => { active = false; };
+  }, []);
+
+  const handleTemplateChange = (templateId: string) => {
+    const template = templates.find((item) => item.id === templateId);
+    if (!template) return;
+    setSelectedTemplateId(template.id);
+    setHeadlineFontSize(template.headlineFontSize);
+    setFooterBarFontSize(template.footerFontSize);
+    setCenterTextFontSize(template.centerTextFontSize);
+    setAccentColor(template.accentColor);
+  };
 
   const category =
     typeof news.category === "string"
@@ -59,7 +121,8 @@ export default function PhotoCardModal({
 
       const link = document.createElement("a");
       link.href = dataUrl;
-      link.download = `jubotara-news-${news._id}.png`;
+      const portalSlug = portalConfig.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      link.download = `${portalSlug || "news"}-${news._id}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -84,15 +147,16 @@ export default function PhotoCardModal({
               headline={headline}
               category={category}
               imageSrc={news.imageSrc}
-              logoUrl={logoUrl}
+              logoUrl={logoUrl || portalConfig.logoUrl}
               date={date}
-              commentText={DEFAULT_COMMENT}
+              commentText={portalConfig.photocard.commentText || DEFAULT_COMMENT}
               accentColor={accentColor}
               imageScale={imageScale}
               headlineFontSize={headlineFontSize}
               footerBarFontSize={footerBarFontSize}
               centerTextFontSize={centerTextFontSize}
-              adVariant={adVariant}
+              ad={selectedAd}
+              template={selectedTemplate}
               isPreview
             />
           </div>
@@ -125,16 +189,33 @@ export default function PhotoCardModal({
 
             <div>
               <label className="mb-2 block text-sm font-bold uppercase text-gray-700">
+                Photocard Template
+              </label>
+              <select
+                value={selectedTemplateId}
+                onChange={(event) => handleTemplateChange(event.target.value)}
+                className="w-full rounded-xl border-2 border-gray-200 p-3 text-lg font-medium text-gray-900 outline-none transition focus:border-blue-500"
+              >
+                {templates.filter((template) => template.enabled).map((template) => (
+                  <option key={template.id} value={template.id}>{template.name} · {template.format}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold uppercase text-gray-700">
                 Ad Variant
               </label>
               <select
-                value={adVariant}
-                onChange={(e) => setAdVariant(e.target.value as "kaniz" | "prime" | "none")}
+                value={selectedAdId}
+                onChange={(e) => setSelectedAdId(e.target.value)}
+                disabled={adsLoading}
                 className="w-full rounded-xl border-2 border-gray-200 p-3 text-lg font-medium text-gray-900 outline-none transition focus:border-blue-500"
               >
-                <option value="kaniz">Kaniz Hospital and Lab</option>
-                <option value="prime">Prime Hospital and Diagnostic Center</option>
-                <option value="none">None (No Ad)</option>
+                <option value="none">{adsLoading ? "Loading ads..." : "No Ad"}</option>
+                {ads.filter((ad) => ad.enabled).map((ad) => (
+                  <option key={ad.id} value={ad.id}>{ad.name}</option>
+                ))}
               </select>
             </div>
 
@@ -314,15 +395,16 @@ export default function PhotoCardModal({
           headline={headline}
           category={category}
           imageSrc={news.imageSrc}
-          logoUrl={logoUrl}
+          logoUrl={logoUrl || portalConfig.logoUrl}
           date={date}
-          commentText={DEFAULT_COMMENT}
+          commentText={portalConfig.photocard.commentText || DEFAULT_COMMENT}
           accentColor={accentColor}
           imageScale={imageScale}
           headlineFontSize={headlineFontSize}
           footerBarFontSize={footerBarFontSize}
           centerTextFontSize={centerTextFontSize}
-          adVariant={adVariant}
+          ad={selectedAd}
+          template={selectedTemplate}
         />
       </div>
     </div>

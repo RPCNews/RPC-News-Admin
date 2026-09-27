@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Geist, Geist_Mono } from "next/font/google";
 import { FeedbackProvider } from "@/components/FeedbackProvider";
+import { portalConfig } from "@/app/lib/portalConfig";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -21,8 +22,9 @@ const solaimanLipi = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Jubotara News Admin",
-  description: "উন্মোচনের লক্ষ্যে, সত্যের পক্ষে",
+  title: `${portalConfig.name} Admin`,
+  description: portalConfig.tagline,
+  icons: { icon: portalConfig.faviconUrl },
 };
 
 export default function RootLayout({
@@ -34,6 +36,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${solaimanLipi.variable} h-full antialiased`}
+      style={{ "--portal-primary": portalConfig.primaryColor } as React.CSSProperties}
     >
       <body className="min-h-full flex flex-col">
         <FeedbackProvider>{children}</FeedbackProvider>
