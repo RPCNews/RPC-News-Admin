@@ -1,8 +1,7 @@
 import type { NextConfig } from "next";
 
 /** Upstream API (no CORS needed: browser calls same-origin /api/v1, Next proxies here). */
-const BACKEND_ORIGIN =
-  process.env.BACKEND_ORIGIN ?? "https://api.jubotaranews.com";
+const BACKEND_ORIGIN = process.env.BACKEND_ORIGIN ?? "https://api.rpcnews.com";
 
 const nextConfig: NextConfig = {
   output: "standalone",
@@ -22,7 +21,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "images.jubotaranews.com",
+        hostname: "images.rpcnews.com",
       },
     ],
   },

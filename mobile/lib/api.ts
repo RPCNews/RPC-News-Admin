@@ -5,9 +5,12 @@ import Constants from "expo-constants";
  * Set EXPO_PUBLIC_API_URL in `.env` (e.g. https://your-api.com/api/v1).
  */
 export const API_URL =
-  (Constants.expoConfig?.extra?.apiUrl as string | undefined)?.replace(/\/$/, "") ||
+  (Constants.expoConfig?.extra?.apiUrl as string | undefined)?.replace(
+    /\/$/,
+    "",
+  ) ||
   process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, "") ||
-  "https://api.jubotaranews.com/api/v1";
+  "https://api.rpcnews.com/api/v1";
 
 export interface Category {
   _id: string;
@@ -87,7 +90,8 @@ export const api = async (
   const res = await fetch(`${API_URL}${endpoint}`, {
     method,
     headers,
-    body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
+    body:
+      body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
   });
 
   if (!res.ok) {

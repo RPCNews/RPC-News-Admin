@@ -16,8 +16,6 @@ import {
   Contact2,
   Mail,
   MessageSquare,
-  Megaphone,
-  Layers,
   Menu,
   X,
 } from "lucide-react";
@@ -31,7 +29,7 @@ export default function Sidebar() {
     const initializeUser = async () => {
       // Defer execution to avoid synchronous setState inside useEffect
       await Promise.resolve();
-      
+
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
         try {
@@ -65,8 +63,6 @@ export default function Sidebar() {
     { name: "Subscribers", href: "/dashboard/subscribers", icon: Mail },
     { name: "Messages", href: "/dashboard/messages", icon: MessageSquare },
     { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-    { name: "Photocard Ads", href: "/dashboard/photocard-ads", icon: Megaphone },
-    { name: "Photocard Templates", href: "/dashboard/photocard-templates", icon: Layers },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
   ];
 
@@ -82,7 +78,11 @@ export default function Sidebar() {
       <div className="border-b border-gray-800 p-6">
         <div className="flex items-center justify-between lg:block">
           <div className="flex items-center gap-3">
-            <img src={portalConfig.logoUrl} alt="" className="h-8 w-8 rounded object-contain" />
+            <img
+              src={portalConfig.logoUrl}
+              alt=""
+              className="h-8 w-8 rounded object-contain"
+            />
             <h2 className="text-xl font-bold tracking-tight text-white">
               {portalConfig.name} Admin
             </h2>
@@ -152,7 +152,9 @@ export default function Sidebar() {
         >
           <Menu size={22} />
         </button>
-        <h2 className="text-lg font-bold text-gray-900">{portalConfig.name} Admin</h2>
+        <h2 className="text-lg font-bold text-gray-900">
+          {portalConfig.name} Admin
+        </h2>
         <div className="w-10" />
       </header>
 

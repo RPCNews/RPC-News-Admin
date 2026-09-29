@@ -1,18 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { domToPng } from "modern-screenshot";
 import { Download, Loader2, X } from "lucide-react";
 import type { News } from "@/app/lib/api";
 import NewsPhotoCard from "@/components/NewsPhotoCard";
 import { useFeedback } from "@/components/FeedbackProvider";
 import { portalConfig } from "@/app/lib/portalConfig";
-import { getDefaultPhotocardAds, loadPhotocardAds, type PhotocardAd } from "@/app/lib/photocardAds";
-import {
-  getDefaultPhotocardTemplates,
-  loadPhotocardTemplates,
-  type PhotocardTemplate,
-} from "@/app/lib/photocardTemplates";
 
 interface PhotoCardModalProps {
   news: News;
@@ -21,85 +15,30 @@ interface PhotoCardModalProps {
 }
 
 const DEFAULT_COMMENT = "বিস্তারিত কমেন্টে";
-const DEFAULT_TEMPLATE = getDefaultPhotocardTemplates()[0];
 export default function PhotoCardModal({
   news,
   onClose,
   logoUrl,
 }: PhotoCardModalProps) {
   const [headline, setHeadline] = useState(news.headline);
-  const [headlineFontSize, setHeadlineFontSize] = useState(DEFAULT_TEMPLATE.headlineFontSize);
-  const [footerBarFontSize, setFooterBarFontSize] = useState(DEFAULT_TEMPLATE.footerFontSize);
-  const [centerTextFontSize, setCenterTextFontSize] = useState(DEFAULT_TEMPLATE.centerTextFontSize);
-  const [accentColor, setAccentColor] = useState(DEFAULT_TEMPLATE.accentColor);
-  const [imageScale, setImageScale] = useState(1);
-  const [ads, setAds] = useState<PhotocardAd[]>(getDefaultPhotocardAds);
-  const [templates, setTemplates] = useState<PhotocardTemplate[]>(getDefaultPhotocardTemplates);
-  const [selectedTemplateId, setSelectedTemplateId] = useState(DEFAULT_TEMPLATE.id);
-  const [selectedAdId, setSelectedAdId] = useState(
-    () => getDefaultPhotocardAds().find((ad) => ad.isDefault)?.id ?? "none",
+  const [headlineFontSize, setHeadlineFontSize] = useState(65);
+  const [footerBarFontSize, setFooterBarFontSize] = useState(31);
+  const [centerTextFontSize, setCenterTextFontSize] = useState(28);
+  const [accentColor, setAccentColor] = useState(
+    portalConfig.photocard.accentColor,
   );
-  const [adsLoading, setAdsLoading] = useState(true);
+  const [imageScale, setImageScale] = useState(1);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const { showToast } = useFeedback();
-
-  useEffect(() => {
-    let active = true;
-    loadPhotocardAds()
-      .then((storedAds) => {
-        if (!active) return;
-        setAds(storedAds);
-        setSelectedAdId(storedAds.find((ad) => ad.enabled && ad.isDefault)?.id ?? "none");
-      })
-      .catch((error) => {
-        console.error("Failed to load photocard ads", error);
-      })
-      .finally(() => {
-        if (active) setAdsLoading(false);
-      });
-    return () => { active = false; };
-  }, []);
-
-  const selectedAd = ads.find((ad) => ad.id === selectedAdId && ad.enabled) ?? null;
-  const selectedTemplate = templates.find((template) => template.id === selectedTemplateId && template.enabled) ?? DEFAULT_TEMPLATE;
-
-  useEffect(() => {
-    let active = true;
-    loadPhotocardTemplates()
-      .then((storedTemplates) => {
-        if (!active) return;
-        setTemplates(storedTemplates);
-        const defaultTemplate = storedTemplates.find((template) => template.enabled && template.isDefault) ?? storedTemplates.find((template) => template.enabled);
-        if (defaultTemplate) {
-          setSelectedTemplateId(defaultTemplate.id);
-          setHeadlineFontSize(defaultTemplate.headlineFontSize);
-          setFooterBarFontSize(defaultTemplate.footerFontSize);
-          setCenterTextFontSize(defaultTemplate.centerTextFontSize);
-          setAccentColor(defaultTemplate.accentColor);
-        }
-      })
-      .catch((error) => console.error("Failed to load photocard templates", error));
-    return () => { active = false; };
-  }, []);
-
-  const handleTemplateChange = (templateId: string) => {
-    const template = templates.find((item) => item.id === templateId);
-    if (!template) return;
-    setSelectedTemplateId(template.id);
-    setHeadlineFontSize(template.headlineFontSize);
-    setFooterBarFontSize(template.footerFontSize);
-    setCenterTextFontSize(template.centerTextFontSize);
-    setAccentColor(template.accentColor);
-  };
 
   const category =
     typeof news.category === "string"
       ? news.category
       : news.category?.name || "Uncategorized";
 
-  const dateSource = news.publishedAt || news.createdAt || new Date().toISOString();
+  const dateSource =
+    news.publishedAt || news.createdAt || new Date().toISOString();
   const date = new Date(dateSource).toLocaleDateString("bn-BD", {
     day: "numeric",
     month: "long",
@@ -121,7 +60,10 @@ export default function PhotoCardModal({
 
       const link = document.createElement("a");
       link.href = dataUrl;
-      const portalSlug = portalConfig.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const portalSlug = portalConfig.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
       link.download = `${portalSlug || "news"}-${news._id}.png`;
       document.body.appendChild(link);
       link.click();
@@ -149,20 +91,20 @@ export default function PhotoCardModal({
               imageSrc={news.imageSrc}
               logoUrl={logoUrl || portalConfig.logoUrl}
               date={date}
-              commentText={portalConfig.photocard.commentText || DEFAULT_COMMENT}
+              commentText={
+                portalConfig.photocard.commentText || DEFAULT_COMMENT
+              }
               accentColor={accentColor}
               imageScale={imageScale}
               headlineFontSize={headlineFontSize}
               footerBarFontSize={footerBarFontSize}
               centerTextFontSize={centerTextFontSize}
-              ad={selectedAd}
-              template={selectedTemplate}
               isPreview
             />
           </div>
         </div>
 
-        <div className="w-full overflow-y-auto p-8 md:w-[28rem]">
+        <div className="w-full overflow-y-auto p-8 md:w-md">
           <div className="mb-8 flex items-center justify-between">
             <h2 className="text-2xl font-bold text-gray-900">Customize Card</h2>
             <button
@@ -188,38 +130,6 @@ export default function PhotoCardModal({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-bold uppercase text-gray-700">
-                Photocard Template
-              </label>
-              <select
-                value={selectedTemplateId}
-                onChange={(event) => handleTemplateChange(event.target.value)}
-                className="w-full rounded-xl border-2 border-gray-200 p-3 text-lg font-medium text-gray-900 outline-none transition focus:border-blue-500"
-              >
-                {templates.filter((template) => template.enabled).map((template) => (
-                  <option key={template.id} value={template.id}>{template.name} · {template.format}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-bold uppercase text-gray-700">
-                Ad Variant
-              </label>
-              <select
-                value={selectedAdId}
-                onChange={(e) => setSelectedAdId(e.target.value)}
-                disabled={adsLoading}
-                className="w-full rounded-xl border-2 border-gray-200 p-3 text-lg font-medium text-gray-900 outline-none transition focus:border-blue-500"
-              >
-                <option value="none">{adsLoading ? "Loading ads..." : "No Ad"}</option>
-                {ads.filter((ad) => ad.enabled).map((ad) => (
-                  <option key={ad.id} value={ad.id}>{ad.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
               <div className="mb-2 flex items-center justify-between">
                 <label className="block text-sm font-bold uppercase text-gray-700">
                   Headline Font Size
@@ -235,7 +145,9 @@ export default function PhotoCardModal({
                   max="100"
                   step="5"
                   value={headlineFontSize}
-                  onChange={(event) => setHeadlineFontSize(Number(event.target.value))}
+                  onChange={(event) =>
+                    setHeadlineFontSize(Number(event.target.value))
+                  }
                   className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 accent-blue-600"
                 />
                 <button
@@ -248,124 +160,118 @@ export default function PhotoCardModal({
               </div>
             </div>
 
-            {showAdvanced && (
-              <>
-                <div>
-                  <div className="mb-2 flex items-center justify-between">
-                    <label className="block text-sm font-bold uppercase text-gray-700">
-                      Footer Font Size
-                    </label>
-                    <span className="rounded-lg bg-blue-50 px-2 py-1 text-xs font-bold text-blue-600">
-                      {footerBarFontSize}px
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="range"
-                      min="20"
-                      max="37"
-                      step="1"
-                      value={footerBarFontSize}
-                      onChange={(event) => setFooterBarFontSize(Number(event.target.value))}
-                      className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 accent-blue-600"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setFooterBarFontSize(34)}
-                      className="text-xs font-bold text-gray-400 transition hover:text-red-500"
-                    >
-                      RESET
-                    </button>
-                  </div>
-                </div>
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <label className="block text-sm font-bold uppercase text-gray-700">
+                  Footer Font Size
+                </label>
+                <span className="rounded-lg bg-blue-50 px-2 py-1 text-xs font-bold text-blue-600">
+                  {footerBarFontSize}px
+                </span>
+              </div>
+              <div className="flex items-center gap-4">
+                <input
+                  type="range"
+                  min="20"
+                  max="37"
+                  step="1"
+                  value={footerBarFontSize}
+                  onChange={(event) =>
+                    setFooterBarFontSize(Number(event.target.value))
+                  }
+                  className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 accent-blue-600"
+                />
+                <button
+                  type="button"
+                  onClick={() => setFooterBarFontSize(31)}
+                  className="text-xs font-bold text-gray-400 transition hover:text-red-500"
+                >
+                  RESET
+                </button>
+              </div>
+            </div>
 
-                <div>
-                  <div className="mb-2 flex items-center justify-between">
-                    <label className="block text-sm font-bold uppercase text-gray-700">
-                      Center Text Size
-                    </label>
-                    <span className="rounded-lg bg-blue-50 px-2 py-1 text-xs font-bold text-blue-600">
-                      {centerTextFontSize}px
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="range"
-                      min="20"
-                      max="37"
-                      step="1"
-                      value={centerTextFontSize}
-                      onChange={(event) => setCenterTextFontSize(Number(event.target.value))}
-                      className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 accent-blue-600"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setCenterTextFontSize(28)}
-                      className="text-xs font-bold text-gray-400 transition hover:text-red-500"
-                    >
-                      RESET
-                    </button>
-                  </div>
-                </div>
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <label className="block text-sm font-bold uppercase text-gray-700">
+                  Center Text Size
+                </label>
+                <span className="rounded-lg bg-blue-50 px-2 py-1 text-xs font-bold text-blue-600">
+                  {centerTextFontSize}px
+                </span>
+              </div>
+              <div className="flex items-center gap-4">
+                <input
+                  type="range"
+                  min="20"
+                  max="37"
+                  step="1"
+                  value={centerTextFontSize}
+                  onChange={(event) =>
+                    setCenterTextFontSize(Number(event.target.value))
+                  }
+                  className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 accent-blue-600"
+                />
+                <button
+                  type="button"
+                  onClick={() => setCenterTextFontSize(28)}
+                  className="text-xs font-bold text-gray-400 transition hover:text-red-500"
+                >
+                  RESET
+                </button>
+              </div>
+            </div>
 
-                <div>
-                  <label className="mb-2 block text-sm font-bold uppercase text-gray-700">
-                    Theme Color
-                  </label>
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="color"
-                      value={accentColor}
-                      onChange={(event) => setAccentColor(event.target.value)}
-                      className="h-16 w-16 cursor-pointer rounded-xl border-2 border-gray-200"
-                    />
-                    <input
-                      type="text"
-                      value={accentColor}
-                      onChange={(event) => setAccentColor(event.target.value)}
-                      className="flex-1 rounded-xl border-2 border-gray-200 p-3 font-mono text-gray-900 outline-none transition focus:border-blue-500"
-                    />
-                  </div>
-                </div>
+            <div>
+              <label className="mb-2 block text-sm font-bold uppercase text-gray-700">
+                Theme Color
+              </label>
+              <div className="flex items-center gap-4">
+                <input
+                  type="color"
+                  value={accentColor}
+                  onChange={(event) => setAccentColor(event.target.value)}
+                  className="h-16 w-16 cursor-pointer rounded-xl border-2 border-gray-200"
+                />
+                <input
+                  type="text"
+                  value={accentColor}
+                  onChange={(event) => setAccentColor(event.target.value)}
+                  className="flex-1 rounded-xl border-2 border-gray-200 p-3 font-mono text-gray-900 outline-none transition focus:border-blue-500"
+                />
+              </div>
+            </div>
 
-                <div>
-                  <div className="mb-2 flex items-center justify-between">
-                    <label className="block text-sm font-bold uppercase text-gray-700">
-                      Image Zoom
-                    </label>
-                    <span className="rounded-lg bg-blue-50 px-2 py-1 text-xs font-bold text-blue-600">
-                      {(imageScale * 100).toFixed(0)}%
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="range"
-                      min="1"
-                      max="3"
-                      step="0.01"
-                      value={imageScale}
-                      onChange={(event) => setImageScale(Number(event.target.value))}
-                      className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 accent-blue-600"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setImageScale(1)}
-                      className="text-xs font-bold text-gray-400 transition hover:text-red-500"
-                    >
-                      RESET
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-
-            <button
-              type="button"
-              onClick={() => setShowAdvanced((current) => !current)}
-              className="text-sm font-bold text-blue-600 transition hover:text-blue-800"
-            >
-              {showAdvanced ? "Hide" : "Show"} Advanced Options
-            </button>
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <label className="block text-sm font-bold uppercase text-gray-700">
+                  Image Zoom
+                </label>
+                <span className="rounded-lg bg-blue-50 px-2 py-1 text-xs font-bold text-blue-600">
+                  {(imageScale * 100).toFixed(0)}%
+                </span>
+              </div>
+              <div className="flex items-center gap-4">
+                <input
+                  type="range"
+                  min="1"
+                  max="3"
+                  step="0.01"
+                  value={imageScale}
+                  onChange={(event) =>
+                    setImageScale(Number(event.target.value))
+                  }
+                  className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 accent-blue-600"
+                />
+                <button
+                  type="button"
+                  onClick={() => setImageScale(1)}
+                  className="text-xs font-bold text-gray-400 transition hover:text-red-500"
+                >
+                  RESET
+                </button>
+              </div>
+            </div>
 
             <div className="border-t border-gray-200 pt-6">
               <button
@@ -403,8 +309,6 @@ export default function PhotoCardModal({
           headlineFontSize={headlineFontSize}
           footerBarFontSize={footerBarFontSize}
           centerTextFontSize={centerTextFontSize}
-          ad={selectedAd}
-          template={selectedTemplate}
         />
       </div>
     </div>

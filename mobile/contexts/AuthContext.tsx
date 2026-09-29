@@ -1,9 +1,16 @@
 import * as SecureStore from "expo-secure-store";
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 import { api } from "@/lib/api";
 
-const TOKEN_KEY = "jubotara_admin_token";
+const TOKEN_KEY = "rpcnews_admin_token";
 
 type AuthContextValue = {
   token: string | null;

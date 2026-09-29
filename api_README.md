@@ -1,6 +1,6 @@
-# Jubotara News API
+# RPC News API
 
-Standalone Express + MongoDB API for the Jubotara News project.
+Standalone Express + MongoDB API for the RPC News project.
 
 This repository is the backend extracted from the original full-stack project. It is intended to serve:
 
@@ -74,7 +74,7 @@ npm start
 Production:
 
 ```text
-https://api.jubotaranews.com/api/v1
+https://api.rpcnews.com/api/v1
 ```
 
 Local default:
@@ -208,6 +208,7 @@ Get the current site logo.
 Get published news with pagination and filtering.
 
 Query params:
+
 - `page`: default `1`
 - `per_page`: default `10`
 - `category_slug`: filter by category slug
@@ -249,6 +250,7 @@ Get all videos sorted by latest.
 #### Standard Response Shapes
 
 **List Endpoints:**
+
 ```json
 {
   "success": true,
@@ -263,6 +265,7 @@ Get all videos sorted by latest.
 ```
 
 **Single Resource Endpoints:**
+
 ```json
 {
   "success": true,
@@ -679,7 +682,7 @@ Response:
 {
   "success": true,
   "secure_url": "https://res.cloudinary.com/...",
-  "public_id": "jubotara-news/..."
+  "public_id": "rpc-news/..."
 }
 ```
 
@@ -799,7 +802,7 @@ Request body:
 ```json
 {
   "logoUrl": "https://example.com/logo.png",
-  "publicId": "jubotara-news/logo"
+  "publicId": "rpc-news/logo"
 }
 ```
 
@@ -900,12 +903,14 @@ Fields:
 ### Subscriber
 
 Fields:
+
 - `email`
 - `isActive`
 
 ### Contact Message
 
 Fields:
+
 - `name`
 - `email`
 - `subject`
