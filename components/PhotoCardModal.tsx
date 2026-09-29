@@ -22,11 +22,6 @@ export default function PhotoCardModal({
 }: PhotoCardModalProps) {
   const [headline, setHeadline] = useState(news.headline);
   const [headlineFontSize, setHeadlineFontSize] = useState(65);
-  const [footerBarFontSize, setFooterBarFontSize] = useState(31);
-  const [centerTextFontSize, setCenterTextFontSize] = useState(28);
-  const [accentColor, setAccentColor] = useState(
-    portalConfig.photocard.accentColor,
-  );
   const [imageScale, setImageScale] = useState(1);
   const [imageHeight, setImageHeight] = useState(760);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -95,12 +90,9 @@ export default function PhotoCardModal({
               commentText={
                 portalConfig.photocard.commentText || DEFAULT_COMMENT
               }
-              accentColor={accentColor}
               imageScale={imageScale}
               imageHeight={imageHeight}
               headlineFontSize={headlineFontSize}
-              footerBarFontSize={footerBarFontSize}
-              centerTextFontSize={centerTextFontSize}
               isPreview
             />
           </div>
@@ -159,88 +151,6 @@ export default function PhotoCardModal({
                 >
                   RESET
                 </button>
-              </div>
-            </div>
-
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <label className="block text-sm font-bold uppercase text-gray-700">
-                  Footer Font Size
-                </label>
-                <span className="rounded-lg bg-blue-50 px-2 py-1 text-xs font-bold text-blue-600">
-                  {footerBarFontSize}px
-                </span>
-              </div>
-              <div className="flex items-center gap-4">
-                <input
-                  type="range"
-                  min="20"
-                  max="37"
-                  step="1"
-                  value={footerBarFontSize}
-                  onChange={(event) =>
-                    setFooterBarFontSize(Number(event.target.value))
-                  }
-                  className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 accent-blue-600"
-                />
-                <button
-                  type="button"
-                  onClick={() => setFooterBarFontSize(31)}
-                  className="text-xs font-bold text-gray-400 transition hover:text-red-500"
-                >
-                  RESET
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <label className="block text-sm font-bold uppercase text-gray-700">
-                  Center Text Size
-                </label>
-                <span className="rounded-lg bg-blue-50 px-2 py-1 text-xs font-bold text-blue-600">
-                  {centerTextFontSize}px
-                </span>
-              </div>
-              <div className="flex items-center gap-4">
-                <input
-                  type="range"
-                  min="20"
-                  max="37"
-                  step="1"
-                  value={centerTextFontSize}
-                  onChange={(event) =>
-                    setCenterTextFontSize(Number(event.target.value))
-                  }
-                  className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 accent-blue-600"
-                />
-                <button
-                  type="button"
-                  onClick={() => setCenterTextFontSize(28)}
-                  className="text-xs font-bold text-gray-400 transition hover:text-red-500"
-                >
-                  RESET
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-bold uppercase text-gray-700">
-                Theme Color
-              </label>
-              <div className="flex items-center gap-4">
-                <input
-                  type="color"
-                  value={accentColor}
-                  onChange={(event) => setAccentColor(event.target.value)}
-                  className="h-16 w-16 cursor-pointer rounded-xl border-2 border-gray-200"
-                />
-                <input
-                  type="text"
-                  value={accentColor}
-                  onChange={(event) => setAccentColor(event.target.value)}
-                  className="flex-1 rounded-xl border-2 border-gray-200 p-3 font-mono text-gray-900 outline-none transition focus:border-blue-500"
-                />
               </div>
             </div>
 
@@ -337,12 +247,9 @@ export default function PhotoCardModal({
           logoUrl={logoUrl || portalConfig.logoUrl}
           date={date}
           commentText={portalConfig.photocard.commentText || DEFAULT_COMMENT}
-          accentColor={accentColor}
           imageScale={imageScale}
           imageHeight={imageHeight}
           headlineFontSize={headlineFontSize}
-          footerBarFontSize={footerBarFontSize}
-          centerTextFontSize={centerTextFontSize}
         />
       </div>
     </div>
