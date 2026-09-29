@@ -28,6 +28,7 @@ export default function PhotoCardModal({
     portalConfig.photocard.accentColor,
   );
   const [imageScale, setImageScale] = useState(1);
+  const [imageHeight, setImageHeight] = useState(760);
   const [isDownloading, setIsDownloading] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const { showToast } = useFeedback();
@@ -96,6 +97,7 @@ export default function PhotoCardModal({
               }
               accentColor={accentColor}
               imageScale={imageScale}
+              imageHeight={imageHeight}
               headlineFontSize={headlineFontSize}
               footerBarFontSize={footerBarFontSize}
               centerTextFontSize={centerTextFontSize}
@@ -245,6 +247,37 @@ export default function PhotoCardModal({
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <label className="block text-sm font-bold uppercase text-gray-700">
+                  Image Height
+                </label>
+                <span className="rounded-lg bg-blue-50 px-2 py-1 text-xs font-bold text-blue-600">
+                  {imageHeight}px
+                </span>
+              </div>
+              <div className="flex items-center gap-4">
+                <input
+                  type="range"
+                  min="500"
+                  max="900"
+                  step="10"
+                  value={imageHeight}
+                  onChange={(event) =>
+                    setImageHeight(Number(event.target.value))
+                  }
+                  className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 accent-blue-600"
+                />
+                <button
+                  type="button"
+                  onClick={() => setImageHeight(760)}
+                  className="text-xs font-bold text-gray-400 transition hover:text-red-500"
+                >
+                  RESET
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <label className="block text-sm font-bold uppercase text-gray-700">
                   Image Zoom
                 </label>
                 <span className="rounded-lg bg-blue-50 px-2 py-1 text-xs font-bold text-blue-600">
@@ -306,6 +339,7 @@ export default function PhotoCardModal({
           commentText={portalConfig.photocard.commentText || DEFAULT_COMMENT}
           accentColor={accentColor}
           imageScale={imageScale}
+          imageHeight={imageHeight}
           headlineFontSize={headlineFontSize}
           footerBarFontSize={footerBarFontSize}
           centerTextFontSize={centerTextFontSize}

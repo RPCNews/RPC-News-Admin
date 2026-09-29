@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import PhotocardAdRenderer from "./photocardAds/PhotocardAdRenderer";
 import { portalConfig } from "@/app/lib/portalConfig";
 import type { PhotocardAd } from "@/app/lib/photocardAds";
-import { getDefaultPhotocardTemplates, type PhotocardTemplate } from "@/app/lib/photocardTemplates";
+import type { PhotocardTemplate } from "@/app/lib/photocardTemplates";
 
 interface NewsPhotoCardProps {
   headline: string;
@@ -15,6 +14,7 @@ interface NewsPhotoCardProps {
   commentText?: string;
   accentColor?: string;
   imageScale?: number;
+  imageHeight?: number;
   headlineFontSize?: number;
   footerBarFontSize?: number;
   centerTextFontSize?: number;
@@ -26,20 +26,16 @@ interface NewsPhotoCardProps {
 
 export default function NewsPhotoCard({
   headline,
-  category,
   imageSrc,
   logoUrl,
   date,
   commentText = "বিস্তারিত কমেন্টে",
-  accentColor = portalConfig.photocard.accentColor,
   imageScale = 1,
+  imageHeight = 760,
   headlineFontSize = 65,
-  footerBarFontSize = 31,
-  centerTextFontSize = 28,
   isPreview = false,
-  ad = null,
-  template = getDefaultPhotocardTemplates()[0],
   cardRef,
+  category,
 }: NewsPhotoCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -74,11 +70,7 @@ export default function NewsPhotoCard({
     ? `/api/proxy-image?url=${encodeURIComponent(logoUrl)}`
     : logoUrl || portalConfig.logoUrl;
 
-  const canvasHeight = template.format === "portrait" ? 1350 : 1080;
-  const contentHeight = canvasHeight - (ad ? 140 : 0);
-  const photoHeight = template.style === "framed" ? contentHeight - 230 : contentHeight;
-  const framed = template.style === "framed";
-  const breaking = template.style === "breaking";
+  const canvasHeight = 1280;
 
   const content = (
     <div
@@ -89,24 +81,79 @@ export default function NewsPhotoCard({
         position: "relative",
         overflow: "hidden",
         fontFamily: "var(--font-solaiman-lipi), Arial, Helvetica, sans-serif",
-        backgroundColor: framed ? "#ffffff" : "#000000",
-        color: "#ffffff",
+        background:
+          "linear-gradient(180deg, #f7f5f2 0%, #eef6f1 38%, #efe9e1 100%)",
+        color: "#0f172a",
         display: "flex",
         flexDirection: "column",
-        border: "1px solid rgba(255, 255, 255, 0.1)", // Very subtle border for dark mode feel
+        boxShadow: "0 22px 40px rgba(15, 23, 42, 0.12)",
       }}
     >
-      <div style={{ position: "relative", width: "1080px", height: `${contentHeight}px` }}>
       <div
         style={{
           position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: `${photoHeight}px`,
-          zIndex: 1,
+          inset: 0,
+          background:
+            "radial-gradient(circle at top left, rgba(12,115,81,0.08), transparent 28%), radial-gradient(circle at bottom right, rgba(217,45,45,0.06), transparent 30%)",
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          background: "#f5f3f0",
+          height: "118px",
+          padding: "72px 0 18px 50px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+          }}
+        >
+          <img
+            src={proxiedLogoUrl}
+            alt={portalConfig.name}
+            crossOrigin="anonymous"
+            style={{ width: "170px", height: "150px", objectFit: "contain" }}
+          />
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minWidth: "220px",
+            height: "68px",
+            background: "#0c7351",
+            borderRadius: "18px 0 0 18px",
+            color: "#fff",
+            fontWeight: 900,
+            fontSize: "40px",
+            padding: "0 26px",
+            boxShadow: "inset 0 -6px 0 rgba(0,0,0,0.12)",
+          }}
+        >
+          {category}
+        </div>
+      </div>
+
+      <div
+        style={{
+          position: "relative",
+          width: "95%",
+          height: `${imageHeight}px`,
           overflow: "hidden",
-          transform: "none",
+          marginTop: "60px",
+          alignSelf: "center",
+          border: "1px solid rgba(15, 23, 42, 0.08)",
+          borderRadius: "12px",
+          background: "#f3f4f6",
         }}
       >
         <img
@@ -120,112 +167,70 @@ export default function NewsPhotoCard({
             objectPosition: "center center",
             transform: `scale(${imageScale})`,
             transition: "transform 0.2s ease-out",
+            display: "block",
           }}
         />
       </div>
 
       <div
         style={{
-          position: "absolute",
-          insetInline: 0,
-          bottom: 0,
-          height: "60%",
-          background: framed ? "transparent" : `linear-gradient(to top, ${accentColor} 0%, transparent 100%)`,
-          zIndex: 2,
-          display: framed ? "none" : "block",
-        }}
-      />
-
-      {template.showLogo ? <div
-        style={{
-          position: "absolute",
-          top: framed ? "28px" : 0,
-          right: template.logoPosition === "top-right" ? "50px" : undefined,
-          left: template.logoPosition === "top-left" ? "50px" : undefined,
-          zIndex: 10,
-          width: framed ? "150px" : "165px",
-          height: framed ? "150px" : "240px",
-          backgroundColor: framed ? "#ffffff" : accentColor,
-          borderRadius: framed ? "18px" : undefined,
-          borderBottomLeftRadius: framed ? "18px" : "80px",
-          borderBottomRightRadius: framed ? "18px" : "80px",
-          display: "flex",
-          alignItems: framed ? "center" : "flex-end",
-          justifyContent: "center",
-          paddingBottom: framed ? 0 : "25px",
-          boxShadow: framed ? "0 6px 20px rgba(0,0,0,.18)" : undefined,
+          position: "relative",
+          padding: "25px 30px 0",
+          background: "transparent",
         }}
       >
         <div
           style={{
-            width: framed ? "122px" : "135px",
-            height: framed ? "122px" : "130px",
-            borderRadius: "999px",
-            backgroundColor: "#ffffff",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            overflow: "hidden",
-            border: "4px solid white",
+            position: "absolute",
+            inset: "-10px 0 auto auto",
+            width: "440px",
+            height: "260px",
+            opacity: 0.12,
+            backgroundImage: `url('/images/dotted-world-map.png')`,
+            backgroundSize: "contain",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            pointerEvents: "none",
+            transform: "translate(60px, -12px)",
           }}
-        >
-          <img
-            src={proxiedLogoUrl}
-            alt={portalConfig.name}
-            crossOrigin="anonymous"
+        />
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "18px" }}>
+          <div
             style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-              padding: "10px",
-            }}
-          />
-        </div>
-      </div> : null}
-
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          bottom: framed ? "150px" : breaking ? "110px" : "78px",
-          width: "100%",
-          padding: breaking ? "22px 42px" : "0 60px 30px",
-          zIndex: 10,
-          backgroundColor: breaking ? accentColor : "transparent",
-          borderRadius: breaking ? "14px" : 0,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: template.headlineAlignment === "center" ? "center" : "stretch",
-            justifyContent: template.headlineAlignment === "center" ? "center" : "flex-start",
-            flexDirection: template.headlineAlignment === "center" ? "column" : "row",
-            gap: template.headlineAlignment === "center" ? "12px" : "25px",
-          }}
-        >
-          {template.style === "editorial" && template.headlineAlignment === "left" ? <div
-            style={{
-              width: "10px",
-              backgroundColor: "#facc15",
-              borderRadius: "2px",
-              flexShrink: 0,
-            }}
-          /> : null}
-          <h1
-            style={{
-              fontSize: `${headlineFontSize}px`,
-              lineHeight: 1.2,
-              fontWeight: 800,
-              margin: 0,
-              color: framed ? "#17212c" : "#ffffff",
-              textAlign: template.headlineAlignment,
-              textShadow: framed || breaking ? "none" : "0 4px 12px rgba(0, 0, 0, 0.8)",
-              whiteSpace: "pre-wrap",
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              borderLeft: "7px solid #d92d2d",
+              paddingLeft: "30px",
             }}
           >
-            {headline}
-          </h1>
+            <h1
+              style={{
+                margin: 0,
+                color: "#0d1d2c",
+                fontSize: `${headlineFontSize}px`,
+                lineHeight: 1.12,
+                fontWeight: 800,
+                whiteSpace: "pre-wrap",
+                maxWidth: "820px",
+              }}
+            >
+              {headline}
+            </h1>
+          </div>
+        </div>
+
+        <div
+          style={{
+            marginTop: "18px",
+            fontSize: "25px",
+            lineHeight: 1.7,
+            color: "#1f2937",
+            maxWidth: "890px",
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          {commentText}
         </div>
       </div>
 
@@ -233,73 +238,42 @@ export default function NewsPhotoCard({
         style={{
           position: "absolute",
           left: 0,
+          right: 0,
           bottom: 0,
-          width: "100%",
-          height: "80px",
-          backgroundColor: framed ? "#17212c" : accentColor,
-          zIndex: 10,
+          height: "82px",
+          background: "#0c7351",
           display: "flex",
           alignItems: "center",
-          padding: "0 60px",
-          fontSize: `${footerBarFontSize}px`,
+          justifyContent: "space-between",
+          padding: "0 28px",
+          color: "#fff",
+          fontWeight: 700,
         }}
       >
         <div
           style={{
-            flex: 1,
             display: "flex",
             alignItems: "center",
-            gap: "15px",
-            fontWeight: 600,
+            gap: "10px",
+            fontSize: "32px",
           }}
         >
-          {template.showCategory ? <span style={{ textTransform: "uppercase" }}>{category}</span> : null}
-          {template.showCategory && template.showDate ? <span style={{ opacity: 0.6 }}>|</span> : null}
-          {template.showDate ? <span>{date}</span> : null}
+          <span style={{ fontSize: "34px" }}>◌</span>
+          <span>{portalConfig.photocard.website}</span>
         </div>
 
         <div
           style={{
-            flex: 1,
             display: "flex",
-            justifyContent: "center",
-            fontWeight: 600,
-            fontSize: `${centerTextFontSize}px`,
-          }}
-        >
-          {template.showComment ? <span>{commentText}</span> : null}
-        </div>
-
-        {template.showWebsite ? <div
-          style={{
-            flex: 1,
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "10px",
             alignItems: "center",
-            fontWeight: 700,
+            gap: "10px",
+            fontSize: "28px",
           }}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="28"
-            height="32"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-            <path d="M2 12h20" />
-          </svg>
-          <span>{portalConfig.photocard.website}</span>
-        </div> : null}
+          <span style={{ fontSize: "30px" }}>🗓</span>
+          <span>{date}</span>
+        </div>
       </div>
-      </div>
-      {ad ? <PhotocardAdRenderer ad={ad} /> : null}
     </div>
   );
 
@@ -328,5 +302,9 @@ export default function NewsPhotoCard({
     );
   }
 
-  return <div className="absolute -left-[9999px] top-0">{content}</div>;
+  return (
+    <div style={{ position: "absolute", left: "-9999px", top: 0 }}>
+      {content}
+    </div>
+  );
 }
